@@ -28,10 +28,10 @@ static constexpr int MIN_X = -bn::display::width() / 2;
 static constexpr int MAX_X = bn::display::width() / 2;
 
 // Setting the player start location & treasure start location
-static constexpr int PLAYER_START_X = 80;
-static constexpr int PLAYER_START_Y = -60;
-static constexpr int TREASURE_START_X = -80;
-static constexpr int TREASURE_START_Y = 60;
+static constexpr int PLAYER_START_X = -100;
+static constexpr int PLAYER_START_Y = 60;
+static constexpr int TREASURE_START_X = -20;
+static constexpr int TREASURE_START_Y = 30;
 
 // Number of characters required to show the longest numer possible in an int (-2147483647)
 static constexpr int MAX_SCORE_CHARS = 11;
