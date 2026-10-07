@@ -15,6 +15,7 @@
 
 // Pixels / Frame player moves at
 static constexpr bn::fixed SPEED = 5;
+static constexpr bn::fixed BOOST_SPEED = 10; 
 
 // Width and height of the the player and treasure bounding boxes
 static constexpr bn::size PLAYER_SIZE = {8, 8};
@@ -25,6 +26,12 @@ static constexpr int MIN_Y = -bn::display::height() / 2;
 static constexpr int MAX_Y = bn::display::height() / 2;
 static constexpr int MIN_X = -bn::display::width() / 2;
 static constexpr int MAX_X = bn::display::width() / 2;
+
+// Setting the player start location & treasure start location
+static constexpr int PLAYER_START_X = 80;
+static constexpr int PLAYER_START_Y = -60;
+static constexpr int TREASURE_START_X = -80;
+static constexpr int TREASURE_START_Y = 60;
 
 // Number of characters required to show the longest numer possible in an int (-2147483647)
 static constexpr int MAX_SCORE_CHARS = 11;
