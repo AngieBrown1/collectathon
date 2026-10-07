@@ -2,6 +2,14 @@ A place to write your findings and plans
 
 ## Understanding
 
+The score is stored within the vector with a given size. 
+Then a sprite generator takes that as input and displays text. 
+We initialize our sprints treasure and player at the stated locations, and use similar button commands, where as long as a button is held/pressed, the player will move by subtracting/adding the speed from the current location. 
+Players pickup coins by overlapping or "intersecting them" by checking if there is one point where both rectangles cover that spot. 
+This is ended with a screen update. Since the screeen update is also within the while loop, this means the program updates as fast as the frames can handle. 
+
+## Planning required changes
+
 1. Angie - Change the speed of the player by adjusting the speed value
 2. K - Change the backdrop by using set_backdrop and adding the backdrop library
 3. Change the location of the player's starting position
@@ -28,8 +36,6 @@ A place to write your findings and plans
             - If our boosting duration value is less than or equal to zero
             - Set boosting to false
     - Within our if statements to move the player, check if we are boosting, and either use the regualr speed or boosting speed. 
-
-## Planning required changes
 
 ## Brainstorming game ideas
 
