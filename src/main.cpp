@@ -28,10 +28,10 @@ static constexpr int MIN_X = -bn::display::width() / 2;
 static constexpr int MAX_X = bn::display::width() / 2;
 
 // Setting the player start location & treasure start location
-static constexpr int PLAYER_START_X = -100;
-static constexpr int PLAYER_START_Y = 60;
-static constexpr int TREASURE_START_X = -20;
-static constexpr int TREASURE_START_Y = 30;
+static constexpr int PLAYER_START_X = -10;
+static constexpr int PLAYER_START_Y = 50;
+static constexpr int TREASURE_START_X = -100;
+static constexpr int TREASURE_START_Y = 10;
 
 // Number of characters required to show the longest numer possible in an int (-2147483647)
 static constexpr int MAX_SCORE_CHARS = 11;
@@ -51,16 +51,35 @@ int main()
     bn::sprite_text_generator text_generator(common::fixed_8x16_sprite_font);
 
     int score = 0;
+    int boost_count{3};
+    int base_duration{0};
+    bool boosted = false;
 
-    bn::sprite_ptr player = bn::sprite_items::square.create_sprite(-10, 50);
-    bn::sprite_ptr treasure = bn::sprite_items::dot.create_sprite(-100, 10);
+    bn::sprite_ptr player = bn::sprite_items::square.create_sprite(PLAYER_START_X, PLAYER_START_Y);
+    bn::sprite_ptr treasure = bn::sprite_items::dot.create_sprite(TREASURE_START_X, TREASURE_START_Y);
 
     while (true)
     {
+
+        //boost player if a is pressed
+        if (bn::keypad::a_pressed() && boost_count > 0 && !boosted) {
+            boosted = true;
+            boost_count--;
+            base_duration = 180;
+        }
+
+        if (boosted){
+            base_duration--;
+            if (base_duration <=0){
+                boosted = false;
+            }
+        }
+
+
         // Move player with d-pad
         if (bn::keypad::left_held())
         {
-            player.set_x(player.x() - SPEED);
+            player.set_x(player.x() - (boosted? BOOST_SPEED : SPEED));
         }
         if (bn::keypad::right_held())
         {
