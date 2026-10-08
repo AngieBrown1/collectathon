@@ -104,7 +104,7 @@ int main()
             player.set_y(MIN_Y);
         }
         if (player.y() < MIN_Y){
-            player.set_y(MIN_Y);
+            player.set_y(MAX_Y);
         }
 
         if (bn::keypad::start_pressed()) {
