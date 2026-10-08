@@ -83,15 +83,15 @@ int main()
         }
         if (bn::keypad::right_held())
         {
-            player.set_x(player.x() + SPEED);
+            player.set_x(player.x() + (boosted? BOOST_SPEED : SPEED));
         }
         if (bn::keypad::up_held())
         {
-            player.set_y(player.y() - SPEED);
+            player.set_y(player.y() - (boosted? BOOST_SPEED : SPEED));
         }
         if (bn::keypad::down_held())
         {
-            player.set_y(player.y() + SPEED);
+            player.set_y(player.y() + (boosted? BOOST_SPEED : SPEED));
         }
 
         // The bounding boxes of the player and treasure, snapped to integer pixels
