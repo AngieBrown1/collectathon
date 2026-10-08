@@ -120,7 +120,6 @@ int main()
             boosted = false; 
         }
 
-        /
 
         // The bounding boxes of the player and treasure, snapped to integer pixels
         bn::rect player_rect = bn::rect(player.x().round_integer(),
