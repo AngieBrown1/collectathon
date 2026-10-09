@@ -11,6 +11,7 @@
 
 #include "bn_sprite_items_dot.h"
 #include "bn_sprite_items_square.h"
+#include "bn_sprite_items_cat.h"
 #include "common_fixed_8x16_font.h"
 
 // Pixels / Frame player moves at
@@ -54,8 +55,10 @@ int main()
     int boost_count{3};
     int base_duration{0};
     bool boosted = false;
+    std::string boost_icon = "boost";
+    
 
-    bn::sprite_ptr player = bn::sprite_items::square.create_sprite(PLAYER_START_X, PLAYER_START_Y);
+    bn::sprite_ptr player = bn::sprite_items::cat.create_sprite(PLAYER_START_X, PLAYER_START_Y);
     bn::sprite_ptr treasure = bn::sprite_items::dot.create_sprite(TREASURE_START_X, TREASURE_START_Y);
 
     while (true)
@@ -66,6 +69,7 @@ int main()
             boosted = true;
             boost_count--;
             base_duration = 180;
+            
         }
 
         if (boosted){
