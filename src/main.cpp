@@ -38,10 +38,78 @@ static constexpr int TREASURE_START_Y = 10;
 
 // Number of characters required to show the longest numer possible in an int (-2147483647)
 static constexpr int MAX_SCORE_CHARS = 11;
+static constexpr int MAX_TEXT_LENGTH = 6; 
 
 // Score location
 static constexpr int SCORE_X = 70;
 static constexpr int SCORE_Y = -70;
+
+// Boost Location
+static constexpr int BOOST_X = 0; 
+static constexpr int BOOST_Y = -60; 
+
+struct Player {
+    bn::sprite_ptr sprite; 
+    int boost_count = 3; 
+    int boost_duration = 0; 
+    bool boosted = false; 
+
+    Player(int start_x, int start_y) : sprite(bn::sprite_items::cat.create_sprite(start_x, start_y)) {}
+
+    // Boost update per frame
+    void boost_update() {
+        if (boosted) {
+            boost_duration--; 
+            if (boost_duration <= 0) {
+                boosted = false; 
+            }
+        }
+    }
+
+    // Boost Logic
+    void activate_boost() {
+        if (boost_count > 0 && !boosted) {
+            boosted = true; 
+            boost_duration = 180; 
+            boost_count--; 
+        }
+    }
+
+    // Player controls
+    void player_controls() {
+        bn::fixed current_speed = boosted ? BOOST_SPEED : SPEED; 
+
+        if (bn::keypad::left_held()) sprite.set_x(sprite.x() - current_speed);
+        if (bn::keypad::right_held()) sprite.set_x(sprite.x() + current_speed);
+        if (bn::keypad::up_held()) sprite.set_y(sprite.y() - current_speed);
+        if (bn::keypad::down_held()) sprite.set_y(sprite.y() + current_speed);
+    }
+
+    // Logic for player screen wrap
+    void player_screen_wrap(int min_x, int min_y, int max_x, int max_y) {
+        if (sprite.x() < min_x) sprite.set_x(max_x); 
+        if (sprite.y() < min_y) sprite.set_y(max_y); 
+        if (sprite.x() > max_x) sprite.set_x(min_x); 
+        if (sprite.y() > max_y) sprite.set_y(min_y);
+    }
+
+    bn::rect get_hitbox(int y_offset, int width, int height) const {
+        return bn::rect(
+            sprite.x().round_integer(), 
+            sprite.y().round_integer() + y_offset, 
+            width, 
+            height
+        );
+    }
+
+    void reset(int start_x, int start_y) {
+        sprite.set_x(start_x); 
+        sprite.set_y(start_y); 
+        boost_count = 3; 
+        boosted = false; 
+        boost_duration = 0; 
+    }
+};
 
 int main()
 {
@@ -51,91 +119,32 @@ int main()
 
     // Will hold the sprites for the score
     bn::vector<bn::sprite_ptr, MAX_SCORE_CHARS> score_sprites = {};
+    bn::vector<bn::sprite_ptr, MAX_TEXT_LENGTH> boost_sprites = {};
     bn::sprite_text_generator text_generator(common::fixed_8x16_sprite_font);
 
     int score = 0;
-    int boost_count{3};
-    int base_duration{0};
-    bool boosted = false;
-    std::string boost_icon = "boost";
 
-    bn::sprite_ptr player = bn::sprite_items::cat.create_sprite(PLAYER_START_X, PLAYER_START_Y);
+    Player player(PLAYER_START_X, PLAYER_START_Y);
     bn::sprite_ptr treasure = bn::sprite_items::mouse.create_sprite(TREASURE_START_X, TREASURE_START_Y);
 
     while (true)
     {
-
-        // boost player if a is pressed
-        if (bn::keypad::a_pressed() && boost_count > 0 && !boosted)
-        {
-            boosted = true;
-            boost_count--;
-            base_duration = 180;
+        if (bn::keypad::a_pressed()) {
+            player.activate_boost(); 
         }
-
-        if (boosted)
-        {
-            base_duration--;
-            if (base_duration <= 0)
-            {
-                boosted = false;
-            }
-        }
-
-        // Move player with d-pad
-        if (bn::keypad::left_held())
-        {
-            player.set_x(player.x() - (boosted ? BOOST_SPEED : SPEED));
-        }
-        if (bn::keypad::right_held())
-        {
-            player.set_x(player.x() + (boosted ? BOOST_SPEED : SPEED));
-        }
-        if (bn::keypad::up_held())
-        {
-            player.set_y(player.y() - (boosted ? BOOST_SPEED : SPEED));
-        }
-        if (bn::keypad::down_held())
-        {
-            player.set_y(player.y() + (boosted ? BOOST_SPEED : SPEED));
-        }
-
-        if (player.x() > MAX_X)
-        {
-            player.set_x(MIN_X);
-        }
-        if (player.x() < MIN_X)
-        {
-            player.set_x(MAX_X);
-        }
-        if (player.y() > MAX_Y)
-        {
-            player.set_y(MIN_Y);
-        }
-        if (player.y() < MIN_Y)
-        {
-            player.set_y(MAX_Y);
-        }
+        player.boost_update(); 
+        player.player_controls(); 
+        player.player_screen_wrap(MIN_X, MIN_Y, MAX_X, MAX_Y);
 
         if (bn::keypad::start_pressed())
         {
-            player.set_x(PLAYER_START_X);
-            player.set_y(PLAYER_START_Y);
-
-            treasure.set_x(TREASURE_START_X);
-            treasure.set_y(TREASURE_START_Y);
-
+            player.reset(PLAYER_START_X, PLAYER_START_Y);
+            treasure.set_position(TREASURE_START_X, TREASURE_START_Y); 
             score = 0;
-
-            boost_count = 3;
-            boosted = false;
         }
 
         // The bounding boxes of the player and treasure, snapped to integer pixels
-        bn::rect player_rect = bn::rect(player.x().round_integer(),
-                                        player.y().round_integer(),
-                                        PLAYER_SIZE.width(),
-                                        PLAYER_SIZE.height());
+        bn::rect player_rect = player.get_hitbox(10, PLAYER_SIZE.width(), PLAYER_SIZE.height());
         bn::rect treasure_rect = bn::rect(treasure.x().round_integer(),
                                           treasure.y().round_integer(),
                                           TREASURE_SIZE.width(),

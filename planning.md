@@ -39,5 +39,12 @@ This is ended with a screen update. Since the screeen update is also within the 
 
 ## Brainstorming game ideas
 
+Possible Game Alterations
+- Add refresh for boosters
+- Add boost icon at the bottom of page: 
+    - Boost icon will flash faster as time goes on to a maximum speed. 
+    - This will be a gray color
+- 
+
 ## Plan for implementing game
 
