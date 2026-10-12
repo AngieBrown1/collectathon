@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <bn_core.h>
 #include <bn_display.h>
 #include <bn_log.h>
@@ -8,6 +10,8 @@
 #include <bn_sprite_text_generator.h>
 #include <bn_size.h>
 #include <bn_string.h>
+#include <bn_colors.h>
+#include <bn_sprite_palette_ptr.h>
 
 #include "bn_sprite_items_dot.h"
 #include "bn_sprite_items_square.h"
@@ -21,6 +25,7 @@ static constexpr bn::fixed SPEED = 2;
 static constexpr bn::fixed BOOST_SPEED = 4;
 
 // Width and height of the the player and treasure bounding boxes
+static constexpr int PLAYER_Y_OFFSET = 8;
 static constexpr bn::size PLAYER_SIZE = {8, 8};
 static constexpr bn::size TREASURE_SIZE = {8, 8};
 
@@ -46,7 +51,7 @@ static constexpr int SCORE_Y = -70;
 
 // Boost Location
 static constexpr int BOOST_X = 0; 
-static constexpr int BOOST_Y = -60; 
+static constexpr int BOOST_Y = 70; 
 
 struct Player {
     bn::sprite_ptr sprite; 
@@ -120,9 +125,13 @@ int main()
     // Will hold the sprites for the score
     bn::vector<bn::sprite_ptr, MAX_SCORE_CHARS> score_sprites = {};
     bn::vector<bn::sprite_ptr, MAX_TEXT_LENGTH> boost_sprites = {};
-    bn::sprite_text_generator text_generator(common::fixed_8x16_sprite_font);
+    bn::sprite_text_generator score_text_generator(common::fixed_8x16_sprite_font);
+    bn::sprite_text_generator boost_text_generator(common::fixed_8x16_sprite_font); 
+    boost_text_generator.set_center_alignment(); 
 
-    int score = 0;
+    int score{0};
+    float blink_speed{0.1f};  
+    float blink_phase{0.0f};
 
     Player player(PLAYER_START_X, PLAYER_START_Y);
     bn::sprite_ptr treasure = bn::sprite_items::mouse.create_sprite(TREASURE_START_X, TREASURE_START_Y);
@@ -144,7 +153,7 @@ int main()
         }
 
         // The bounding boxes of the player and treasure, snapped to integer pixels
-        bn::rect player_rect = player.get_hitbox(10, PLAYER_SIZE.width(), PLAYER_SIZE.height());
+        bn::rect player_rect = player.get_hitbox(PLAYER_Y_OFFSET, PLAYER_SIZE.width(), PLAYER_SIZE.height());
         bn::rect treasure_rect = bn::rect(treasure.x().round_integer(),
                                           treasure.y().round_integer(),
                                           TREASURE_SIZE.width(),
@@ -161,10 +170,39 @@ int main()
             score++;
         }
 
+        boost_sprites.clear();
+        bn::string<16> boost_string = player.boosted ? "BOOSTED" : "";
+        if (player.boosted) {
+            boost_text_generator.generate(BOOST_X, BOOST_Y, boost_string, boost_sprites);
+            bn::sprite_palette_ptr boost_text_palette = boost_sprites[0].palette(); 
+
+            if (blink_speed < 1.0f) {
+                blink_speed += 0.01f; 
+            }
+            
+            // Add blink speed to blink phase, which increases past the threshold, and then resets
+            blink_phase += blink_speed; 
+
+            // Cyclic reset based on pi
+            if (blink_phase > 6.28f) {
+                blink_phase = -6.28f;
+            }
+
+            if (blink_phase < 3.14f) {
+                boost_text_palette.set_color(1, bn::colors::gray); 
+            } else {
+                boost_text_palette.set_color(1, bn::colors::white); 
+            }
+
+        } else {
+            blink_speed = 0.1f; 
+            blink_phase = 0.0f; 
+        }
+
         // Update score display
         bn::string<MAX_SCORE_CHARS> score_string = bn::to_string<MAX_SCORE_CHARS>(score);
         score_sprites.clear();
-        text_generator.generate(SCORE_X, SCORE_Y,
+        score_text_generator.generate(SCORE_X, SCORE_Y,
                                 score_string,
                                 score_sprites);
 
