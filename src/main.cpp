@@ -24,6 +24,10 @@
 // Pixels / Frame player moves at
 static constexpr bn::fixed SPEED = 2;
 static constexpr bn::fixed BOOST_SPEED = 4;
+//the speed and stregnth of the jump and gravity to move the cat back down
+bn:: fixed jump_speed = 0;
+bn::fixed jump_strength = 4;
+bn::fixed gravity = 0.2;
 
 // Width and height of the the player and treasure bounding boxes
 static constexpr int PLAYER_Y_OFFSET = 8;
@@ -53,6 +57,7 @@ static constexpr int SCORE_Y = -70;
 // Boost Location
 static constexpr int BOOST_X = 0; 
 static constexpr int BOOST_Y = 70; 
+
 
 struct Player {
     bn::sprite_ptr sprite; 
@@ -89,6 +94,8 @@ struct Player {
         if (bn::keypad::right_held()) sprite.set_x(sprite.x() + current_speed);
         if (bn::keypad::up_held()) sprite.set_y(sprite.y() - current_speed);
         if (bn::keypad::down_held()) sprite.set_y(sprite.y() + current_speed);
+        
+        
     }
 
     // Logic for player screen wrap
@@ -140,7 +147,10 @@ int main()
     bn::sprite_ptr treasure = bn::sprite_items::mouse.create_sprite(TREASURE_START_X, TREASURE_START_Y);
 
     while (true)
-    {
+    {   
+        //add jump for the cat
+    
+
         if (bn::keypad::a_pressed()) {
             player.activate_boost(); 
         }
@@ -211,6 +221,19 @@ int main()
 
         // Update RNG seed every frame so we don't get the same sequence of positions every time
         rng.update();
+        
+        //cat jumps when b is pressed 
+        if(bn::keypad::b_pressed()){
+            jump_speed -= jump_strength;
+        }
+        jump_speed += gravity;
+
+        player.sprite.set_y(player.sprite.y() + jump_speed);
+
+        if(player.sprite.y() >= PLAYER_START_Y){
+            player.sprite.set_y(PLAYER_START_Y);
+            jump_speed = 0;
+        }
 
         bn::core::update();
     }
