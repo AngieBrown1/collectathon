@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include <bn_core.h>
 #include <bn_display.h>
@@ -25,8 +26,8 @@
 static constexpr bn::fixed SPEED = 2;
 static constexpr bn::fixed BOOST_SPEED = 4;
 
-static constexpr bn::fixed RAT_SPEED = 1.5;
-static constexpr bn::fixed RAT_BOOST_SPEED = 5; 
+static constexpr bn::fixed MOUSE_SPEED = 0.5;
+static constexpr bn::fixed MOUSE_BOOST_SPEED = 3; 
 
 //the speed and stregnth of the jump and gravity to move the cat back down
 bn:: fixed jump_speed = 0;
@@ -135,6 +136,9 @@ struct Player {
         boosted = false; 
         boost_duration = 0; 
     }
+
+    bn::fixed get_x() const { return sprite.x(); }
+    bn::fixed get_y() const { return sprite.y(); } 
 };
 struct Mouse {
     bn::sprite_ptr sprite; 
@@ -142,14 +146,27 @@ struct Mouse {
     bool boosted = false;  
 
     int boost_duration = 120;
-    int cooldown = 600;
+    int cooldown = 0;
     
     Mouse(int start_x, int start_y) : sprite(bn::sprite_items::mouse.create_sprite(start_x, start_y)) {}; 
     
     virtual ~Mouse() = default;
 
-    virtual void update(const Player& player) {
+    virtual void update_location(const Player& player) {
+        activate_boost(player); 
+        boost_update();
+    }
 
+    int get_distance(const Player& player) const {
+        int dx = bn::abs(player.get_x() - sprite.x()).round_integer();
+        int dy = bn::abs(player.get_y() - sprite.y()).round_integer();
+
+        int max_dist = std::max(dx, dy); 
+        int min_dist = std::min(dx, dy); 
+
+        int dist = max_dist + (min_dist >> 2);
+
+        return dist; 
     }
 
     void reset(int start_x, int start_y) {
@@ -160,8 +177,8 @@ struct Mouse {
         cooldown = 600;
     }   
 
-    void activate_boost() {
-        if (!boosted && cooldown <= 0) {
+    void activate_boost(const Player& player) {
+        if (!boosted && cooldown <= 0 && get_distance(player) <= 60) {
             boosted = true; 
             boost_duration = 120; 
             cooldown = 600 + boost_duration;
@@ -180,6 +197,13 @@ struct Mouse {
         }
     }
 
+    void mouse_clamp(int min_x, int min_y, int max_x, int max_y) {
+        if (sprite.x() < min_x) sprite.set_x(min_x); 
+        if (sprite.y() < min_y) sprite.set_y(min_y); 
+        if (sprite.x() > max_x) sprite.set_x(max_x); 
+        if (sprite.y() > max_y) sprite.set_y(max_y);
+    }
+
     bn::rect get_hitbox(int y_offset, int height, int width) const {
         return bn::rect(
             sprite.x().round_integer(), 
@@ -190,7 +214,36 @@ struct Mouse {
     }
 };
 struct TreasureMouse : Mouse {
+    TreasureMouse(int start_x, int start_y) 
+        : Mouse(start_x, start_y) {};
 
+    void update_location(const Player& player) override {
+        activate_boost(player); 
+        boost_update();
+
+        bn::fixed current_speed = boosted ? MOUSE_BOOST_SPEED : MOUSE_SPEED;
+
+        bn::fixed move_x = 0;
+        bn::fixed move_y = 0; 
+
+        int dist_to_player = get_distance(player); 
+
+        if (dist_to_player < 80) {
+            if (player.get_x() > sprite.x()) { move_x -= current_speed; }
+            if (player.get_x() < sprite.x()) { move_x += current_speed; }
+            if (player.get_y() > sprite.y()) { move_y -= current_speed; }
+            if (player.get_y() < sprite.y()) { move_y += current_speed; }
+        }
+
+        int wall_margin = 32;
+        if (sprite.x() < MIN_X + wall_margin) { move_x += current_speed; }
+        if (sprite.x() > MAX_X - wall_margin) { move_x -= current_speed; }
+        if (sprite.y() < MIN_Y + wall_margin) { move_y += current_speed; }
+        if (sprite.y() > MAX_Y - wall_margin) { move_y -= current_speed; }
+
+        sprite.set_x(sprite.x() + move_x);
+        sprite.set_y(sprite.y() + move_y);
+    }
 };
 
 int main()
@@ -214,7 +267,7 @@ int main()
 
 
     Player player(PLAYER_START_X, PLAYER_START_Y);
-    // bn::sprite_ptr treasure = bn::sprite_items::mouse.create_sprite(TREASURE_START_X, TREASURE_START_Y);
+    TreasureMouse treasure(TREASURE_START_X, TREASURE_START_Y);
 
     while (true)
     {   
@@ -225,20 +278,19 @@ int main()
         player.boost_update(); 
         player.player_controls(); 
         player.player_screen_wrap(MIN_X, MIN_Y, MAX_X, MAX_Y);
+        treasure.update_location(player); 
+        treasure.mouse_clamp(MIN_X, MIN_Y, MAX_X, MAX_Y);
 
         if (bn::keypad::start_pressed())
         {
             player.reset(PLAYER_START_X, PLAYER_START_Y);
-            treasure.set_position(TREASURE_START_X, TREASURE_START_Y); 
+            treasure.reset(TREASURE_START_X, TREASURE_START_Y); 
             score = 0;
         }
 
         // The bounding boxes of the player and treasure, snapped to integer pixels
         bn::rect player_rect = player.get_hitbox(PLAYER_Y_OFFSET, PLAYER_SIZE.width(), PLAYER_SIZE.height());
-        bn::rect treasure_rect = bn::rect(treasure.x().round_integer(),
-                                          treasure.y().round_integer(),
-                                          TREASURE_SIZE.width(),
-                                          TREASURE_SIZE.height());
+        bn::rect treasure_rect = treasure.get_hitbox(-4, TREASURE_SIZE.width(), TREASURE_SIZE.height());
 
         // If the bounding boxes overlap, set the treasure to a new location an increase score
         if (player_rect.intersects(treasure_rect))
@@ -246,7 +298,7 @@ int main()
             // Jump to any random point in the screen
             int new_x = rng.get_int(MIN_X, MAX_X);
             int new_y = rng.get_int(MIN_Y, MAX_Y);
-            treasure.set_position(new_x, new_y);
+            treasure.reset(new_x, new_y);
 
             score++;
         }
