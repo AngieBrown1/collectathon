@@ -240,17 +240,17 @@ struct TreasureMouse : Mouse {
     }
 };
 
-// If cheese worked
-struct Cheese {
-    bn::sprite_ptr sprite;
+// // If cheese worked
+// struct Cheese {
+//     bn::sprite_ptr sprite;
 
-    Cheese(int start_x, int start_y) : sprite(bn::sprite_items::cheese.create_sprite(start_x, start_y)) {};
+//     Cheese(int start_x, int start_y) : sprite(bn::sprite_items::cheese.create_sprite(start_x, start_y)) {};
 
-    void set_position(int x, int y) {
-        sprite.set_x(x);
-        sprite.set_y(y);
-    }
-};
+//     void set_position(int x, int y) {
+//         sprite.set_x(x);
+//         sprite.set_y(y);
+//     }
+// };
 
 int main()
 {
@@ -274,7 +274,7 @@ int main()
 
     Player player(PLAYER_START_X, PLAYER_START_Y);
     TreasureMouse treasure(TREASURE_START_X, TREASURE_START_Y);
-    Cheese cheese(MAX_X - 16, MAX_Y - 16);
+    // Cheese cheese(MAX_X - 16, MAX_Y - 16);
 
     while (true)
     {   
