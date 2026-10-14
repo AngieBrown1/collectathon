@@ -25,6 +25,9 @@
 static constexpr bn::fixed SPEED = 2;
 static constexpr bn::fixed BOOST_SPEED = 4;
 
+static constexpr bn::fixed RAT_SPEED = 1.5;
+static constexpr bn::fixed RAT_BOOST_SPEED = 5; 
+
 //the speed and stregnth of the jump and gravity to move the cat back down
 bn:: fixed jump_speed = 0;
 bn::fixed jump_strength = 4;
@@ -91,6 +94,10 @@ struct Player {
         }
     }
 
+    void jump() {
+
+    }
+
     // Player controls
     void player_controls() {
         bn::fixed current_speed = boosted ? BOOST_SPEED : SPEED; 
@@ -129,6 +136,62 @@ struct Player {
         boost_duration = 0; 
     }
 };
+struct Mouse {
+    bn::sprite_ptr sprite; 
+
+    bool boosted = false;  
+
+    int boost_duration = 120;
+    int cooldown = 600;
+    
+    Mouse(int start_x, int start_y) : sprite(bn::sprite_items::mouse.create_sprite(start_x, start_y)) {}; 
+    
+    virtual ~Mouse() = default;
+
+    virtual void update(const Player& player) {
+
+    }
+
+    void reset(int start_x, int start_y) {
+        sprite.set_x(start_x); 
+        sprite.set_y(start_y); 
+
+        boosted = false; 
+        cooldown = 600;
+    }   
+
+    void activate_boost() {
+        if (!boosted && cooldown <= 0) {
+            boosted = true; 
+            boost_duration = 120; 
+            cooldown = 600 + boost_duration;
+        }
+    }
+
+    void boost_update() {
+        if (boosted) {
+            boost_duration--; 
+            if (boost_duration <= 0) {
+                boosted = false; 
+                cooldown = 600;
+            }
+        } else {
+            cooldown--;
+        }
+    }
+
+    bn::rect get_hitbox(int y_offset, int height, int width) const {
+        return bn::rect(
+            sprite.x().round_integer(), 
+            sprite.y().round_integer() + y_offset, 
+            width, 
+            height
+        );
+    }
+};
+struct TreasureMouse : Mouse {
+
+};
 
 int main()
 {
@@ -151,13 +214,11 @@ int main()
 
 
     Player player(PLAYER_START_X, PLAYER_START_Y);
-    bn::sprite_ptr treasure = bn::sprite_items::mouse.create_sprite(TREASURE_START_X, TREASURE_START_Y);
+    // bn::sprite_ptr treasure = bn::sprite_items::mouse.create_sprite(TREASURE_START_X, TREASURE_START_Y);
 
     while (true)
     {   
         //add jump for the cat
-    
-
         if (bn::keypad::a_pressed()) {
             player.activate_boost(); 
         }
@@ -237,17 +298,18 @@ int main()
         }
         
         if(jumping){
-        jump_speed += gravity;
+            jump_speed += gravity;
 
-        player.sprite.set_y(player.sprite.y() + jump_speed);
-       
+            player.sprite.set_y(player.sprite.y() + jump_speed);
+        
 
-        if(player.sprite.y() >= landing_y){
-            player.sprite.set_y(landing_y);
-            jump_speed = 0;
-            jumping = false;
+            if(player.sprite.y() >= landing_y)  {
+                player.sprite.set_y(landing_y);
+                jump_speed = 0;
+                jumping = false;
+            }
         }
-    }
+        
         bn::core::update();
     }
 }
