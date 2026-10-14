@@ -24,7 +24,7 @@
 static constexpr bn::fixed SPEED = 2;
 static constexpr bn::fixed BOOST_SPEED = 4;
 
-static constexpr bn::fixed MOUSE_SPEED = 0.5;
+static constexpr bn::fixed MOUSE_SPEED = 0.8;
 static constexpr bn::fixed MOUSE_BOOST_SPEED = 3; 
 
 //the speed and stregnth of the jump and gravity to move the cat back down
