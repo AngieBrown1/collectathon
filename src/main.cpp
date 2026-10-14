@@ -15,11 +15,9 @@
 #include <bn_sprite_palette_ptr.h>
 #include <bn_backdrop.h>
 
-#include "bn_sprite_items_dot.h"
-#include "bn_sprite_items_square.h"
+
 #include "bn_sprite_items_cat.h"
 #include "bn_sprite_items_mouse.h"
-#include "bn_sprite_items_fish.h"
 #include "common_fixed_8x16_font.h"
 
 // Pixels / Frame player moves at
@@ -107,7 +105,7 @@ struct Player {
         if (bn::keypad::right_held()) sprite.set_x(sprite.x() + current_speed);
         if (bn::keypad::up_held()) sprite.set_y(sprite.y() - current_speed);
         if (bn::keypad::down_held()) sprite.set_y(sprite.y() + current_speed);
-        //if (bn::keypad::b_pressed(player.sprite.set_y(player.sprite.y() + jump_speed)));
+
         
         
     }
